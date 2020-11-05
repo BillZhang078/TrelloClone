@@ -1,20 +1,21 @@
 import * as React from 'react';
 import { AppContainer } from './styles';
-import { Card, Column, AddNewItem } from './components';
+import { Column, AddNewItem } from './components';
+
+import { useAppState } from './hooks/useAppState';
 
 function App() {
+  const { state, dispatch } = useAppState();
+  console.log(state);
   return (
     <AppContainer>
-      <Column text='To Do'>
-        <Card text='Learn Graphql' />
-      </Column>
-      <Column text='In Progress'>
-        <Card text='Learn TypeScript' />
-      </Column>
-      <Column text='Finished'>
-        <Card text='Learn Node.js' />
-      </Column>
-      <AddNewItem toggleButtonText='+ Add Another Task' onAdd={console.log} />
+      {state.lists.map((item, i) => {
+        return <Column key={item.id} text={item.text} index={i} />;
+      })}
+      <AddNewItem
+        toggleButtonText='+ Add Another Task'
+        onAdd={text => dispatch({ type: 'ADD_LIST', payload: { text } })}
+      />
     </AppContainer>
   );
 }

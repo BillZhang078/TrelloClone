@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useReducer } from 'react';
+import { nanoid } from 'nanoid';
+import { findListId } from '../utils/findListId';
 
 interface Task {
   id: string;
@@ -17,6 +19,7 @@ interface AppState {
 
 interface AppStateContextProps {
   state: AppState;
+  dispatch: React.Dispatch<Action>;
 }
 
 const appData: AppState = {
@@ -39,13 +42,56 @@ const appData: AppState = {
   ]
 };
 
-const AppStateContext = React.createContext<AppStateContextProps>(
+type Action =
+  | {
+      type: 'ADD_LIST';
+      payload: {
+        text: string;
+      };
+    }
+  | {
+      type: 'ADD_TASK';
+      payload: {
+        text: string;
+        listId: string;
+      };
+    };
+
+const appStateReducer = (state: AppState, action: Action): AppState => {
+  switch (action.type) {
+    case 'ADD_LIST': {
+      return {
+        ...state,
+        lists: [
+          ...state.lists,
+          { id: nanoid(), text: action.payload.text, tasks: [] }
+        ]
+      };
+    }
+    case 'ADD_TASK': {
+      const index = findListId(state.lists, action.payload.listId);
+      state.lists[index].tasks.push({
+        id: nanoid(),
+        text: action.payload.text
+      });
+      return {
+        ...state
+      };
+    }
+    default: {
+      return state;
+    }
+  }
+};
+
+export const AppStateContext = React.createContext<AppStateContextProps>(
   {} as AppStateContextProps
 );
 
 export const AppStateProvider = ({ children }: React.PropsWithChildren<{}>) => {
+  const [state, dispatch] = useReducer(appStateReducer, appData);
   return (
-    <AppStateContext.Provider value={{ state: appData }}>
+    <AppStateContext.Provider value={{ state: state, dispatch }}>
       {children}
     </AppStateContext.Provider>
   );
